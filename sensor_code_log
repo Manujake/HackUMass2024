@@ -1,0 +1,77 @@
+// Define pins for each sensor
+#define TRIG_PIN1 7
+#define ECHO_PIN1 6
+
+#define TRIG_PIN2 8
+#define ECHO_PIN2 9
+
+#define TRIG_PIN3 4
+#define ECHO_PIN3 5
+
+#define TRIG_PIN4 3
+#define ECHO_PIN4 2
+
+void setup() {
+  Serial.begin(9600);
+
+  // Initialize each sensor's pins
+  pinMode(TRIG_PIN1, OUTPUT);
+  pinMode(ECHO_PIN1, INPUT);
+  
+  pinMode(TRIG_PIN2, OUTPUT);
+  pinMode(ECHO_PIN2, INPUT);
+
+  pinMode(TRIG_PIN3, OUTPUT);
+  pinMode(ECHO_PIN3, INPUT);
+
+  pinMode(TRIG_PIN4, OUTPUT);
+  pinMode(ECHO_PIN4, INPUT);
+}
+
+long get_distance(int trigPin, int echoPin) {
+  long duration, distance;
+
+  // Trigger the sensor
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // Measure the echo time
+  duration = pulseIn(echoPin, HIGH);
+
+  // Calculate distance in cm
+  distance = duration * 0.034 / 2;
+
+  // Return the distance
+  return distance;
+}
+
+void loop() {
+  // Get distances from each sensor
+  long distance1 = get_distance(TRIG_PIN1, ECHO_PIN1);
+  Serial.print("Distance from Sensor 1: ");
+  Serial.print(distance1);
+  Serial.println(" cm");
+
+  long distance2 = get_distance(TRIG_PIN2, ECHO_PIN2);
+  Serial.print("Distance from Sensor 2: ");
+  Serial.print(distance2);
+  Serial.println(" cm");
+
+  long distance3 = get_distance(TRIG_PIN3, ECHO_PIN3);
+  Serial.print("Distance from Sensor 3: ");
+  Serial.print(distance3);
+  Serial.println(" cm");
+
+  long distance4 = get_distance(TRIG_PIN4, ECHO_PIN4);
+  Serial.print("Distance from Sensor 4: ");
+  Serial.print(distance4);
+  Serial.println(" cm");
+
+  // Debug statement to verify all sensors are working
+  Serial.println("All sensors checked.");
+
+  delay(500); // Wait before the next set of readings
+}
