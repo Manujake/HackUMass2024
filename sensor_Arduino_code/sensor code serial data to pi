@@ -1,0 +1,101 @@
+// Define pins for each sensor
+#define TRIG_PIN1 7
+#define ECHO_PIN1 6
+
+#define TRIG_PIN2 8
+#define ECHO_PIN2 9
+
+#define TRIG_PIN3 4
+#define ECHO_PIN3 5
+
+#define TRIG_PIN4 3
+#define ECHO_PIN4 2
+
+void setup() {
+  Serial.begin(9600);  // Start serial communication with Raspberry Pi
+
+  // Initialize each sensor's pins
+  pinMode(TRIG_PIN1, OUTPUT);
+  pinMode(ECHO_PIN1, INPUT);
+  
+  pinMode(TRIG_PIN2, OUTPUT);
+  pinMode(ECHO_PIN2, INPUT);
+
+  pinMode(TRIG_PIN3, OUTPUT);
+  pinMode(ECHO_PIN3, INPUT);
+
+  pinMode(TRIG_PIN4, OUTPUT);
+  pinMode(ECHO_PIN4, INPUT);
+}
+
+long get_distance(int trigPin, int echoPin) {
+  long duration, distance;
+
+  // Trigger the sensor
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // Measure the echo time
+  duration = pulseIn(echoPin, HIGH);
+
+  // Calculate distance in cm
+  distance = duration * 0.034 / 2;
+
+  // Return the distance
+  return distance;
+}
+
+long calculate_filtered_average(int trigPin, int echoPin) {
+  const int numReadings = 5;
+  long readings[numReadings];
+  long total = 0;
+  int validReadings = 0;
+
+  // Collect readings
+  for (int i = 0; i < numReadings; i++) {
+    readings[i] = get_distance(trigPin, echoPin);
+    delay(50); // Short delay between readings
+  }
+
+  // Calculate the initial average (excluding potential outliers)
+  for (int i = 0; i < numReadings; i++) {
+    total += readings[i];
+  }
+  long average = total / numReadings;
+
+  // Filter out erroneous values
+  total = 0;
+  validReadings = 0;
+  for (int i = 0; i < numReadings; i++) {
+    if (readings[i] <= 1.5 * average) { // Exclude values greater than 1.5 times the average
+      total += readings[i];
+      validReadings++;
+    }
+  }
+
+  // Calculate final average of valid readings
+  if (validReadings > 0) {
+    return total / validReadings;
+  } else {
+    return average; // If all readings are filtered out, use the original average
+  }
+}
+
+void loop() {
+  // Get filtered averages from each sensor
+  long distance1 = calculate_filtered_average(TRIG_PIN1, ECHO_PIN1);
+  long distance2 = calculate_filtered_average(TRIG_PIN2, ECHO_PIN2);
+  long distance3 = calculate_filtered_average(TRIG_PIN3, ECHO_PIN3);
+  long distance4 = calculate_filtered_average(TRIG_PIN4, ECHO_PIN4);
+
+  // Send data over serial in a structured format
+  Serial.print("S1:"); Serial.print(distance1); Serial.print(";");
+  Serial.print("S2:"); Serial.print(distance2); Serial.print(";");
+  Serial.print("S3:"); Serial.print(distance3); Serial.print(";");
+  Serial.print("S4:"); Serial.print(distance4); Serial.println(";");
+
+  delay(500); // Wait before the next set of readings
+}
