@@ -1,5 +1,4 @@
-#rover_control.py
-
+# rover_control.py
 
 import RPi.GPIO as GPIO
 import time
@@ -19,6 +18,9 @@ FL_ENABLE = 18  # Front Left enable pin
 FR_ENABLE = 24  # Front Right enable pin
 BL_ENABLE = 12  # Back Left enable pin
 BR_ENABLE = 25  # Back Right enable pin
+
+# Define a global speed variable (default 25%)
+SPEED = 25 # Set speed to 25% duty cycle
 
 # Setup GPIO mode
 GPIO.setmode(GPIO.BCM)
@@ -64,42 +66,42 @@ def set_speed(duty_cycle):
     BL_PWM.ChangeDutyCycle(duty_cycle)
     BR_PWM.ChangeDutyCycle(duty_cycle)
 
-# Movement functions
-def move_forward(speed=80):
-    """Moves the rover forward at a specified speed."""
-    set_speed(speed)
+# Movement functions using the global SPEED variable
+def move_forward():
+    """Moves the rover forward at the specified global speed."""
+    set_speed(SPEED)
     move_motor(FL_IN1, FL_IN2, 'forward')
     move_motor(FR_IN1, FR_IN2, 'forward')
     move_motor(BL_IN1, BL_IN2, 'forward')
     move_motor(BR_IN1, BR_IN2, 'forward')
-    print("Moving Forward")
+    print(f"Moving Forward at speed: {SPEED}%")
 
-def move_backward(speed=80):
-    """Moves the rover backward at a specified speed."""
-    set_speed(speed)
+def move_backward():
+    """Moves the rover backward at the specified global speed."""
+    set_speed(SPEED)
     move_motor(FL_IN1, FL_IN2, 'backward')
     move_motor(FR_IN1, FR_IN2, 'backward')
     move_motor(BL_IN1, BL_IN2, 'backward')
     move_motor(BR_IN1, BR_IN2, 'backward')
-    print("Moving Backward")
+    print(f"Moving Backward at speed: {SPEED}%")
 
-def turn_left(speed=60):
-    """Performs a left turn using diagonal motors at a specified speed."""
-    set_speed(speed)
+def turn_left():
+    """Performs a left turn using diagonal motors at the specified global speed."""
+    set_speed(2*SPEED)
     move_motor(FR_IN1, FR_IN2, 'forward')  # Front Right moves forward
     move_motor(BL_IN1, BL_IN2, 'backward')  # Back Left moves backward
     move_motor(FL_IN1, FL_IN2, 'stop')      # Front Left stops
     move_motor(BR_IN1, BR_IN2, 'stop')      # Back Right stops
-    print("Turning Left with Diagonal Motors")
+    print(f"Turning Left with Diagonal Motors at speed: {SPEED}%")
 
-def turn_right(speed=60):
-    """Performs a right turn using diagonal motors at a specified speed."""
-    set_speed(speed)
+def turn_right():
+    """Performs a right turn using diagonal motors at the specified global speed."""
+    set_speed(2*SPEED)
     move_motor(FL_IN1, FL_IN2, 'forward')   # Front Left moves forward
     move_motor(BR_IN1, BR_IN2, 'backward')  # Back Right moves backward
     move_motor(FR_IN1, FR_IN2, 'stop')      # Front Right stops
     move_motor(BL_IN1, BL_IN2, 'stop')      # Back Left stops
-    print("Turning Right with Diagonal Motors")
+    print(f"Turning Right with Diagonal Motors at speed: {SPEED}%")
 
 def stop():
     """Stops all motors."""
