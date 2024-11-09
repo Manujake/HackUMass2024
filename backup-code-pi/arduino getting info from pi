@@ -1,1 +1,60 @@
+// Motor Pin Definitions
+const int IN1 = 10;  // Motor 1 Input 1
+const int IN2 = 11;  // Motor 1 Input 2
+const int IN3 = 12;  // Motor 2 Input 1
+const int IN4 = 13;  // Motor 2 Input 2
 
+void setup() {
+    Serial.begin(9600);  // Match baud rate with Pi's serial port
+    pinMode(IN1, OUTPUT);
+    pinMode(IN2, OUTPUT);
+    pinMode(IN3, OUTPUT);
+    pinMode(IN4, OUTPUT);
+}
+
+void loop() {
+    // Check if there is data available from the Raspberry Pi
+    if (Serial.available() > 0) {
+        char command = Serial.read();  // Read a single character from Pi
+
+        // Execute the corresponding motor action based on the command
+        if (command == 'f') {
+            // Move Forward
+            digitalWrite(IN1, HIGH);
+            digitalWrite(IN2, LOW);
+            digitalWrite(IN3, HIGH);
+            digitalWrite(IN4, LOW);
+            Serial.println("Moving Forward");
+        } else if (command == 'b') {
+            // Move Backward
+            digitalWrite(IN1, LOW);
+            digitalWrite(IN2, HIGH);
+            digitalWrite(IN3, LOW);
+            digitalWrite(IN4, HIGH);
+            Serial.println("Moving Backward");
+        } else if (command == 'r') {
+            // Turn Right
+            digitalWrite(IN1, HIGH);
+            digitalWrite(IN2, LOW);
+            digitalWrite(IN3, LOW);
+            digitalWrite(IN4, HIGH);
+            Serial.println("Turning Right");
+        } else if (command == 'l') {
+            // Turn Left
+            digitalWrite(IN1, LOW);
+            digitalWrite(IN2, HIGH);
+            digitalWrite(IN3, HIGH);
+            digitalWrite(IN4, LOW);
+            Serial.println("Turning Left");
+        } else if (command == 's') {
+            // Stop
+            digitalWrite(IN1, LOW);
+            digitalWrite(IN2, LOW);
+            digitalWrite(IN3, LOW);
+            digitalWrite(IN4, LOW);
+            Serial.println("Stopping");
+        } else {
+            Serial.println("Unknown command received");
+        }
+    }
+}
