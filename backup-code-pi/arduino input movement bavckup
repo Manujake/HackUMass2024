@@ -1,0 +1,109 @@
+// Motor Pin Definitions
+const int IN1 = 10;  // Motor 1 Input 1
+const int IN2 = 11;  // Motor 1 Input 2
+const int IN3 = 12;  // Motor 2 Input 1
+const int IN4 = 13;  // Motor 2 Input 2
+
+// Define time durations for each movement
+const int FORWARD_DURATION = 3000; // 2 seconds for forward
+const int TURN_DURATION = 3000;    // 1 second for right/left/back
+const int PAUSE_BETWEEN_COMMANDS = 2000; // 2 seconds between commands
+
+void setup() {
+  // Set motor control pins as outputs
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+
+  // Start serial communication
+  Serial.begin(9600);
+}
+
+// Function to move forward
+void front() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+  delay(FORWARD_DURATION);
+  stop(); // Stop after moving forward
+}
+
+// Function to move backward
+void back() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+  delay(TURN_DURATION);
+  stop(); // Stop after moving backward
+}
+
+// Function to turn right
+void right() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+  delay(TURN_DURATION);
+  stop(); // Stop after turning right
+}
+
+// Function to turn left
+void left() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+  delay(TURN_DURATION);
+  stop(); // Stop after turning left
+}
+
+// Function to stop all motors
+void stop() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+  delay(500); // Short pause after stopping
+}
+
+// Function to execute a command sequence with a delay between each command
+void executeCommands(const String &commands) {
+  for (int i = 0; i < commands.length(); i++) {
+    char command = commands.charAt(i);
+    switch (command) {
+      case 'f':
+        front();
+        break;
+      case 'b':
+        back();
+        break;
+      case 'r':
+        right();
+        break;
+      case 'l':
+        left();
+        break;
+      case 's':
+        stop();
+        break;
+      default:
+        Serial.println("Unknown command");
+        break;
+    }
+    delay(PAUSE_BETWEEN_COMMANDS); // 2-second delay between each command
+  }
+}
+
+void loop() {
+  // Define the command sequence to repeat
+  String commandSequence = "ffrflfrs";
+
+  // Continuously execute the command sequence in a loop
+  executeCommands(commandSequence);
+
+  // Add a delay if needed between each sequence execution
+  delay(1000);  // 1-second pause before repeating the sequence
+}

@@ -1,0 +1,168 @@
+// Motor Pin Definitions
+const int IN1 = 10;  // Motor 1 Input 1
+const int IN2 = 11;  // Motor 1 Input 2
+const int IN3 = 12;  // Motor 2 Input 1
+const int IN4 = 13;  // Motor 2 Input 2
+
+// Sensor Pin Definitions
+#define TRIG_PIN1 7
+#define ECHO_PIN1 6
+#define TRIG_PIN2 8
+#define ECHO_PIN2 9
+#define TRIG_PIN3 4
+#define ECHO_PIN3 5
+
+// Obstacle Distance Threshold (in cm)
+const int OBSTACLE_THRESHOLD = 20;  // Distance at which the rover considers an obstacle
+
+void setup() {
+  // Motor Pins Setup
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+
+  // Sensor Pins Setup
+  pinMode(TRIG_PIN1, OUTPUT);
+  pinMode(ECHO_PIN1, INPUT);
+  pinMode(TRIG_PIN2, OUTPUT);
+  pinMode(ECHO_PIN2, INPUT);
+  pinMode(TRIG_PIN3, OUTPUT);
+  pinMode(ECHO_PIN3, INPUT);
+
+  // Start Serial for Debugging
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Get filtered average distances from each sensor
+  long frontDistance = calculate_filtered_average(TRIG_PIN1, ECHO_PIN1);
+  long leftDistance = calculate_filtered_average(TRIG_PIN2, ECHO_PIN2);
+  long rightDistance = calculate_filtered_average(TRIG_PIN3, ECHO_PIN3);
+
+  Serial.print("Front: "); Serial.print(frontDistance); Serial.print(" cm, ");
+  Serial.print("Left: "); Serial.print(leftDistance); Serial.print(" cm, ");
+  Serial.print("Right: "); Serial.print(rightDistance); Serial.println(" cm");
+
+  // Obstacle Avoidance Logic
+  if (frontDistance < OBSTACLE_THRESHOLD) {
+    Serial.println("Obstacle detected in front! Stopping motors.");
+    motorStop();
+    delay(1000);  // Wait for 1 second
+
+    // Decide which direction to turn based on available space
+    if (leftDistance > rightDistance) {
+      Serial.println("Turning left due to more space on the left.");
+      turnLeft();
+    } else {
+      Serial.println("Turning right due to more space on the right.");
+      turnRight();
+    }
+    
+    delay(1000);  // Wait for 1 second after turning
+
+    // Check front distance again after turning
+    frontDistance = calculate_filtered_average(TRIG_PIN1, ECHO_PIN1);
+    if (frontDistance >= OBSTACLE_THRESHOLD) {
+      Serial.println("Path is clear after turning. Moving forward.");
+      motorForward();
+    } else {
+      Serial.println("Obstacle still detected. Trying another turn.");
+    }
+  } else {
+    Serial.println("Path is clear. Moving forward.");
+    motorForward();
+  }
+
+  delay(100);  // Small delay before the next check
+}
+
+// Function to Move Both Motors Forward
+void motorForward() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+}
+
+// Function to Stop Both Motors
+void motorStop() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+}
+
+// Function to Turn Left
+void turnLeft() {
+  // Stop right motor, move left motor forward
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+}
+
+// Function to Turn Right
+void turnRight() {
+  // Stop left motor, move right motor forward
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+}
+
+// Function to Get Distance from an Ultrasonic Sensor
+long get_distance(int trigPin, int echoPin) {
+  long duration, distance;
+
+  // Trigger the sensor
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // Measure the echo time
+  duration = pulseIn(echoPin, HIGH);
+
+  // Calculate distance in cm
+  distance = duration * 0.034 / 2;
+  return distance;
+}
+
+// Function to Get a Filtered Average Distance
+long calculate_filtered_average(int trigPin, int echoPin) {
+  const int numReadings = 5;
+  long readings[numReadings];
+  long total = 0;
+  int validReadings = 0;
+
+  // Collect readings
+  for (int i = 0; i < numReadings; i++) {
+    readings[i] = get_distance(trigPin, echoPin);
+    delay(30); // Short delay between readings
+  }
+
+  // Calculate the initial average (excluding potential outliers)
+  for (int i = 0; i < numReadings; i++) {
+    total += readings[i];
+  }
+  long average = total / numReadings;
+
+  // Filter out erroneous values
+  total = 0;
+  validReadings = 0;
+  for (int i = 0; i < numReadings; i++) {
+    if (readings[i] <= 1.5 * average) { // Exclude values greater than 1.5 times the average
+      total += readings[i];
+      validReadings++;
+    }
+  }
+
+  // Calculate final average of valid readings
+  if (validReadings > 0) {
+    return total / validReadings;
+  } else {
+    return average; // If all readings are filtered out, use the original average
+  }
+}
