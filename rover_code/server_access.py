@@ -1,25 +1,25 @@
+from pi_to_arduino import ser, send_command
 from flask import Flask, request
 from flask_cors import CORS
-# from pi_to_arduino import ser, send_command
-import time
 import atexit
-import serial
 
 
-
+# Fask Set Up
 app = Flask(__name__)
 CORS(app)  # Enable CORS to handle cross-origin requests from AWS S3
-ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 
 
+# Handle POST methods (HTML) from the AWS S3 User Interface
 @app.route('/move', methods=['POST'])
 def move():
     data = request.json
     direction = data.get('direction')
     if direction:
-        ser.write(direction.encode('utf-8'))
-        time.sleep(5)
-        print(f"Sent command to Arduino: {direction}")
+        send_command(direction)
+        # ser.write(direction.encode('utf-8'))
+        # print(f"Sent command to Arduino: {direction}")
+        # time.sleep(5)
+        
     return {'status': 'success', 'received_direction': direction}, 200
 
 
