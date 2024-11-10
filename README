@@ -1,0 +1,28 @@
+Project Overview
+The project consists of two main components:
+
+Arduino Rover Control: The Arduino controls the rover’s movement by activating motor pins based on commands sent from the Raspberry Pi.
+Raspberry Pi Server: The server communicates with the Arduino and manages event handling for executing commands.
+The rover can perform the following actions:
+
+Move forward
+Move backward
+Turn left
+Turn right
+Stop
+The Raspberry Pi uses serial communication to send specific commands to the Arduino, which interprets them to control the motors.
+
+Components
+ - Arduino Uno: Controls the rover motors.
+ - Raspberry Pi: Acts as the server to send commands.
+ - Motor Driver Module: Connects to Arduino for motor control.
+ - 4 DC Motors: Rover movement (connected via the motor driver).
+ - Power Bank: Powers the Arduino and motors.
+ - OTG Cable: Connects Arduino to Raspberry Pi via USB.
+
+Running the Program
+Power the Arduino with the power bank.
+Start the Python server on the Raspberry Pi. This server can trigger commands that the Arduino interprets for motor control.
+Send commands from the Raspberry Pi to the Arduino through the server code to control the rover’s movements as described in the code.
+The rover will perform actions based on the received commands and will print status messages to the Serial Monitor for debugging.
+
