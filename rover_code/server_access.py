@@ -1,26 +1,51 @@
 from pi_to_arduino import ser, send_command
 from flask import Flask, request
 from flask_cors import CORS
-import atexit
+from threading import Lock
+import atexit, time
 
 
-# Fask Set Up
+# Flask Set Up
 app = Flask(__name__)
 CORS(app)  # Enable CORS to handle cross-origin requests from AWS S3
 
+current_direction = None      # Variable to store the current action
+action_lock = Lock()          # Lock to manage access to the current action
+stop_event = False            # Global flag to signal stop
 
-# Handle POST methods (HTML) from the AWS S3 User Interface
 @app.route('/move', methods=['POST'])
-def move():
-    data = request.json
-    direction = data.get('direction')
-    if direction:
-        send_command(direction)
-        # ser.write(direction.encode('utf-8'))
-        # print(f"Sent command to Arduino: {direction}")
-        # time.sleep(5)
-        
-    return {'status': 'success', 'received_direction': direction}, 200
+def handle_action():
+    global current_direction, stop_event
+    direction = request.json.get('direction')   # get the action performed by the AWS
+    possible_directions = ['f', 'b', 'l', 'r', 's']
+
+    if direction not in possible_directions:
+        return {"status": "error", "message": "Unknown action"}
+
+    with action_lock:
+        # Signal any ongoing action to stop if a new action is requested
+        if direction != current_direction:
+            stop_event = True
+            print(f"Stopping current action: {current_direction}")
+            time.sleep(1)  # Short delay to allow the previous action to stop
+
+            # Set the new action and clear the stop flag
+            current_direction = direction
+            stop_event = False
+            print(f"New action set: {current_direction}")
+
+    if direction == 's':  # Special case for stop action
+        send_command(current_direction)
+        print("Stop action completed.")
+        return {"status": "completed", "message": "Stop action completed"}
+
+    # Process the new action in a loop
+    while not stop_event:
+        send_command(current_direction)
+        time.sleep(1)   # Optional delay between commands
+        print("Moving...")
+
+    return {"status": "interrupted", "message": "Move action was interrupted"}
 
 
 # Close the serial connection when the app shuts down
